@@ -328,7 +328,7 @@ ModuleNotFoundError: No module named 'langchain.chains'
 ```
 
 ### Reason
-New versions of LangChain removed or reorganized modules.
+New versions of LangChain removed or reorganized modules. All these issues are mostly due to version constraints of python and computational resource constraints.
 
 ### Fix
 Avoid deprecated imports like:
@@ -350,7 +350,7 @@ ModuleNotFoundError: langchain.text_splitter
 ```
 
 ### Reason
-LangChain moved text splitters to a separate package.
+LangChain moved text splitters to a separate package. All these issues are mostly due to version constraints of python and computational resource constraints.
 
 ### Fix
 
@@ -377,7 +377,7 @@ IndentationError: expected an indented block
 ```
 
 ### Reason
-Python requires indentation after function definitions.
+Python requires indentation after function definitions. All these issues are mostly due to version constraints of python and computational resource constraints.
 
 Incorrect:
 
