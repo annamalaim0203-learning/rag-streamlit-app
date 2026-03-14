@@ -9,7 +9,7 @@ from rag_pipeline.vector_store import get_or_create_vector_store
 from rag_pipeline.retriever import build_retriever
 
 
-st.set_page_config(page_title="RAG Document Assistant", layout="wide")
+st.set_page_config(page_title="RAG Document Assistant [PROTOTYPE - NOT READY]", layout="wide")
 st.title("RAG Document Assistant")
 
 DOCUMENTS_DIR = os.getenv("RAG_DOCUMENTS_DIR", "documents")
