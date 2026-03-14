@@ -150,6 +150,16 @@ A vector database works like a **library where books are organized by meaning in
 
 ---
 
+1. FAISS
+
+Definition (one line):
+FAISS is a library used to store embeddings (vectors) and quickly find the most similar ones.
+
+Simple Analogy:
+FAISS is like a super-fast librarian who finds books with similar meaning instead of similar titles. 📚
+
+---
+
 # 6. Retriever
 
 ### Definition
@@ -188,6 +198,24 @@ google/flan-t5-base
 
 ### Analogy
 Think of the LLM as an **AI writer who reads retrieved documents and writes a final answer**.
+
+---
+
+2. FLAN-T5
+
+Definition (one line):
+FLAN-T5 is a pretrained language model that understands instructions and generates answers in natural language.
+
+Simple Analogy:
+FLAN-T5 is like a smart student who reads information and writes a clear answer for your question. 🧠
+
+3. LangChain
+
+Definition (one line):
+LangChain is a framework that connects LLMs, documents, embeddings, and vector databases to build AI applications.
+
+Simple Analogy:
+LangChain is like a manager who coordinates the search engine, documents, and AI model to produce the final answer. 🧩
 
 ---
 
