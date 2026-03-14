@@ -430,6 +430,21 @@ streamlit run app.py
 
 ---
 
+Absolutely—here are the token steps in simple pointers:
+
+1. Go to https://huggingface.co and log in  
+2. Click your profile icon → **Settings**  
+3. Click **Access Tokens**  
+4. Click **New token**  
+5. Enter a name (e.g., `rag-streamlit-app`)  
+6. Select permission: **Inference → Make calls to Inference Providers**  
+7. Click **Generate** and copy the token  
+
+Then in PowerShell:
+```powershell
+$env:HUGGINGFACEHUB_API_TOKEN="YOUR_HF_TOKEN"
+```
+
 # Author
 
 AI / ML Engineering Learning Project
