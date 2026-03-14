@@ -1,0 +1,264 @@
+Prisma CWPP - Runtime Incidents
+
+IMPORTANT NOTES:
+
+1. MD5 VALUES GENERATED ARE ONLY FOR THE FILE (filename.so/filename.tmp)or TARGET PATH and never for whole path.
+
+ALTERED BINARY: 
+
+Source code/binary of the application has been altered. 
+
+For altered binary, Prisma does not provide MD5 value for the incident. 
+
+The incident can be suppressed only by fixing the vulnerabilities/compliance or using a desired binary for the application. 
+
+Sometimes, we can get the MD5 for the incident by checking the image under process info. 
+
+Go to Monitor - Vulnerabilities - Images - deployed - Filter the image. Click the image and navigate to Process info. 
+
+Search for the process which captured in the incident and copy the relevant MD5 from there. 
+
+Check the MD5 in virus total/ OTX alien vault website and make sure it is clean and has no vulnerability.
+
+As of now (32.05.124), there is no way to supress the alert/incident from the console level.
+
+Experinces in Altered Binary at AIRTEL (2024):
+
+1. /usr/bin/mysql - Binary was altered, incident captured along with mysql query. We had connect with Application team and came to know that the mysql binary is altered and was provided by Nokia as a helm chart and airtel team deploy their services to make use of the DB. Hence it a customised binary. As mentioned above, we didn't get MD5 value for this incident. So even if we get the MD5 value from the App. owner and map it in the custom rule, the tool will not recognise the HASH on it's own. So the issue will exist. SO we have to remove the image from the repository and build a new infra with new image. We have to make sure that the new image is not altered. If it is an altered binary, we have to get the info of changes made to the binary and ensure it is non-vulnerable.
+
+2. /usr/bin/git - This incident was captured mentioning altered or corrupted binary.The metadata doesn't match whats happened by the package manager. Whenever, we see git in an incident we should check whether the git has been downloaded from repo package manager(apt/yum) or from the internet?. So we had a connect with the App. owner and got confirmed that they are using an alpine image which requires latest version of GIT which is mandatory requirement for them. We have asked them to remove the git component from the image. And the incident was closed, no new incidents were captured after that.
+
+3. /usr/bin/systemctl - This incident was captured mentioning altered or corrupted binary.The metadata doesn't match whats happened by the package manager. We checked the image under Monitor - Vulnerabilities - Images - deployed - Filter the image. Click the image and navigate to Process info.Search for the process which captured in the incident and copy the relevant MD5 from there. Check the MD5 in virus total website and make sure it is clean and has no vulnerability. SO it has been closed.
+
+4. We got an alert for an image, where the compliance was breached that the binary was altered. When checked with the application owner, they confirmed that they haven't done any alterations in the binary. Then on what category the tool is marking it as an altered binary?? PENDING WITH PANW.
+
+Hijacked Process:
+
+An execution flow hijack attempt incident indicates that a possible attempt to hijack a program execution flow was observed. Special Linux library system files, which have a system-wide effect, were altered (this is usually undesirable, and is typically employed only as an emergency remedy or maliciously).
+
+1. nc utility has more negative use cases than telnet/curl. If we add -e flag along with nc command, one can take shell in the target host. So nc utility has to be removed from all the containers and from the image. 
+
+2. Make use of telent/curl utility.
+
+3. /usr/bin/coreutils --coreutils-prog-shebang-cp/usr/bin/cp -r 8 /home/arbor/FX/BP/data/yaml/temp_bip_library - Intial analysis was not helpful. We had a discussion with App owner and got info that command was executed for a POC purpose to analyse an ongoing issue.
+
+
+Lateral Movement:
+
+1. nc utility has more negative use cases than telnet/curl. If we add -e flag along with nc command, one can take shell in the target host. So nc utility has to be removed from all the containers. 
+
+2. Make use of telent/curl utility.
+
+3. Telnet/curl should be allowed only to private subnet and URL. External connectivity should be prohibited.
+
+4. Check the image layer in cwpp portal whether the nc utility package installation is part of the image. If it is a part of the image, ask the app. owner to remove the utility from both container and image.
+
+
+Port scanning:
+
+It is mostly used to scan port discovery from a source IP to a target IP. In our case, we have a proxy server in our environment. All the incoming/outgoing requests are routed through the proxy server.
+
+As a part of discussion with App. owner, we came to know there was a discovery in place that trigerred this incident. That was removed after the requirement of the App. team. Need to know what/why about the service used by App. owner.
+
+As it was used by proxy server & it was a POC, it was closed as false positive.
+
+
+
+Suspicious Binary:
+
+Analysis strategy - Need to check why utilities/packages/open source componenents are not added in IMAGE build phase. Why they are added in runtime. (i.e - after image is built and application hosted and started serving requests, these components are added at that point of time.)
+
+
+1. /usr/local/bin/install-cni wrote a suspicious packed/encrypted binary to/host/opt/cni/bin/istio-cni. Packing/encryption can conceal malicious executables. MD5: 8cbad834713901976073e0168fa4a48b. Command: install-cni--log_output_level=default:info
+
+The install-cni is a service mesh used to manage container traffic. It is an open source component provided by Linux and it is licensed image component.
+
+As it was a open source component & added in runtime to a production grade cluster, we asked to remove it from the repository. It has been removed as well. Hence it is closed.
+
+
+2. /usr/local/bin/git wrote a suspicious packed/encrypted binary to/godata/pipelines/channels-xena-build-security/security_code/coverity/cov-analysis/bin/coverity.Packing/encryption can conceal malicious executables. MD5: a68b440f2b65758fa1d4e1c50f36b6ed. Command: git clone --branch master-sit--depth=2 https://channels_user:MTg2Njg3MTQ3MDA0Osvsx%2FKP0Ambis+IHLjuUtL+v1Wr@code.airtelworld.in:7990/bitbucket/scm/tecops/digital_alt-shared-library.git /go/pipelines/channels-xena-build-security/security_code
+
+3. Black duck scan - Black Duck Software Composition Analysis (SCA) is used to scan for open source components, security vulnerabilities, and compliance issues in applications and containers. It is also part of coverity.
+
+2 & 3:
+Airtel team is using coverity tool, which is provides comprehensive static analysis that empowers developers and security teams to deliver high-quality software that complies with security, functional safety, and industry standards.
+
+In this incident, the coverity is scanning the git pipeline, so it comes under coverity scan. So it is a false positive.
+
+There are Multiple unique MD5 values captured for the incident. We can whitelist the process by the following ways.
+
+        Method 1-Directly mentioning MD5 values in our custom rule. But not feasible in larger scale    (CURRENTLY IN USE)
+
+        Method 2- We can make use of in built arguments provided by the tool to whitelist the alerts.
+
+            Template - File.path startswith "/godata/pipelines/" and file.path contains "security_code/coverity and set the action to ignore. (RECOMMENDED)
+
+        Method 3-Making use of wildcard. (CURRENTLY NOT SUPPORTED BY THE TOOL)
+
+
+WHY WE ARE GETTING MULTIPLE HASHES FOR SINGLE LIBRARY:
+
+Incident is generated every time an encrypted binary was written to disk, by checking the binary entropy. doc on binary entropy: "File entropy measures the randomness of the data in a file and is used to determine whether a file contains hidden data or suspicious scripts. The scale of randomness is from 0 to 8, not random to totally random, such as an encrypted file". 
+
+1. Does the hash provided in the incident, "<process name> wrote a suspicious packed/encrypted binary to <path Packing/encryption can conceal malicious executables in a suspicious binary incident. is Of encrypted binary or the original file
+
+Answer - the hash mentioned in the alert is of the encrypted file only
+
+2. Does the PC generate a file in all the cases, whenever an encrypted file is written, how is the event being triggered?
+
+Answer : Yes, incident is generated every time an encrypted binary was written to disk, by checking the binary entropy doc on binary entropy: "File entropy measures the randomness of the data in a file and is used to determine whether a file contains hidden data or suspicious scripts. The scale of randomness is from 0 to 8, not random to totally random, such as an encrypted file"
+
+    
+    Solution from PANW team for whitelisting mutiple MD5 hashes for same type of alert., (Dated - 23/10)
+
+    1. Mapping unique MD5 hash - If incidnets where we get less no.of unique hashes
+    2. Mapping with file path - If incidents where we get large no. of unique hashes.
+
+4. usr/bin/dockerd wrote a suspicious packed/encrypted binary to /var/lib/docker/vfs/dir/ffc37059e2677e1104471eabf3a3c76808e4559542929e18400770f2f0a3c606/usr/lib/x86_64-linux-gnu/gconv/GB18030.so. Packing/encryption can conceal malicious executables. MD5: 6a92299c277c5f8531ef2ed280445514. Command: dockerd--config-file/etc/docker/daemon.json
+
+
+As per the analysis, whenever below command execute, it require a function (library) to complete that task, each lib is unique itself and requirement basis.
+
+Command: dockerd-config-file /etc/docker/daemon.json
+
+In our case, prisma is showing "GB18030.so suspicious as the file is encrypted. However, Application team has installed the utility "x86_64-linux-gnu" from genuine source which is https://www.gnu.org/software/binutils/ and it's licensed ( GPL) as per Prisma cloud.
+
+And the MD5 has been verified in virus total and it is also clean and no damage. There is also alternate tool for this. "www.analyze.intezer.com". But it is a paid tool. First 15 checks can be done free.(FREEMIUM)
+
+NOTE - As we are getting multiple unique MD5 values for same library GB18030.so. we need to analyse the root cause of it. When checked official linux site and many sites of any recent changes to the library, we dont see any updates recently. And MD5 value changes only there is changes to the binary. It will not change for metadata changes or any other. 
+
+                      ******** Solution for whitelisting multiple hashes for incidents in Prisma Console ******
+
+As per security best practices, any whitelisting activity should be carried out by command. In our case (AIRTEL), we get 
+the command from each incident. For dockerd, Command: dockerd--config-file/etc/docker/daemon.json. 
+
+Click on ADD custom rule, select type as processes and then we have add this command over there.
+
+CHALLENGES - 
+
+1. When the type is set to processes, the Prisma console is not accepting any file name or path(directory)
+ in the syntax.
+
+2. But we get the command with path and file name from the incident message. 
+
+3. Currently we have to work with PANW to know an approach to whitelisting based on processes
+
+We have created a custom rule with strong syntax which will whitelist every single particular incidents. 
+
+Message SAMPLE - 
+
+usr/bin/dockerd wrote a suspicious packed/encrypted binary to /var/lib/docker/vfs/dir/
+ffc37059e2677e1104471eabf3a3c76808e4559542929e18400770f2f0a3c606/usr/lib/x86_64-linux-gnu/gconv/GB18030.so. 
+Packing/encryption can conceal malicious executables. MD5: 6a92299c277c5f8531ef2ed280445514. 
+Command: dockerd--config-file/etc/docker/daemon.json
+
+syntax - file.path startswith "/var/lib/docker/vfs/dir/" and file.path contains "/x86_64-linux-gnu/"
+or file.path contains "GB18030.so" or file-path contains "IBM933.so" or file.path
+contains "IBM932.so" or file.path contains "IBM930.so"
+
+Breakdown of the synntax - 
+
+1. file.path startswith - Pre defined Syntax from Prisma for type Filesystem (PRESS ctrl + space bar for more options)
+
+2. "/var/lib/docker/vfs/dir/" is the staic path of the incident message.
+
+3. and(AND) operator - multiplication table - when both condition is TRUE, it will be TRUE.
+
+4. "/x86_64-linux-gnu/" - this is the next static path mentioned in the incident message.
+
+5. or(OR) operator - Addition table - If any one of the condition is TRUE, it will be true.
+
+6. "GB18030.so" - Libray which is captured in the incident message. Libraries are invoked to do a particular task.
+It can't do any other task out of it.
+
+7. Following this we can add multiple libraries captured in the incident message and map it in the custom rule.
+Finally after creating syntax set the effect to ALLOW. 
+
+
+
+
+
+5. /usr/local/bin/python3.11 wrote a suspicious packed/encrypted binary to /usr/local/lib/python3.11/site-packages/numpy/_core/_multiarray_umath.cpython-311-x86_64- linux-gnu.so. Packing/encryption can conceal malicious executables. MD5: 334367f92617a92f54fd3b789f17c4ef. Command: /usr/local/bin/python3.11usr/local/bin/pip install --no-cache-dir -r requirements.txt
+
+
+We have already done the analysis, this alert is triggered for "multiarray_umath.cpython-311-x86_64-linux-gnu.so", and this library is used whenever we are trying to install the required resources, mentioning in a text file and executing that altogether. Also we have checked the Hash value (334367f92617a92f54fd3b789f17c4ef) of the library on virus total, which highlights that it is legitimate library.
+
+6. /assisted-image-service wrote a suspicious packed/encrypted binary to /data/isoutil1377518690/boot/grub/powerpc-ieee1275/gcry_crc.mod. Packing/encryption can conceal malicious executables. MD5: 72627f48debf5e9a9eff49c5b3f7b58b. Command: /assisted-image-service
+
+
+ANALYSIS - 
+* The above incident has been captured under management cluster where prisma cwpp console is hosted.
+
+* The MD5 hash captured is clean and non vulnerable.
+
+* The Infra team has confirmed that multicluster-engine is an ocp cluster created for poc of cluster as a service feature testing in cellsta
+
+* This is under poc testing and not live.
+
+* Both Image and Container has been removed at the time of incident.
+
+UPDATES from team 
+
+The OCP team was performing upgrade actiity on the cluster. They are deploying cluster on top of a cluster. They also need socat utility for tunneling purposes. So we have to check the purpose of using socat. Post that we can create collection and whitelist socat
+
+
+KUBERNETES ATTACK:
+
+1. Message - /usr/bin/tar downloaded kubecti to container (/home/jenkins/.local/bin/exec/kubectI). MD5:
+9783946141e885e0f70f9060dcb03c90
+
+INVESTIGATION - This is a normal behaviour when running the CI/CD pipelines using Jenkins. JNLP is the major entity to run the jobs via
+Jenkins. We have observed this JNLP agent has been blocked or not getting the admin privileges to run the CI/CD jobs for
+automaton.
+
+
+Note: If JNLP agent is blocked in the network then 1 am afraid we cannot go via CI/CD pipelines. As it a major
+component which communicate with Jenkins sever
+
+
+Explanation
+
+
+The context of Jenkins CI/CD pipelines, a JNLP (Java Network Launch Protocol) container is typically used for managing
+agent nodes (also known as build agents or slaves) that run jobs in a distributed Jenkins setup. Here's why a JNLP
+container is often needed in Jenkins for CI/CD:
+1. Distributed Builds:
+Jenkins can operate in a distributed mode where the master (main Jenkins server) manages the orchestration and
+scheduling of jobs, while the build tasks themselves are executed on separate agent nodes. These agents can be on
+different machines or containers to scale out the CI/CD pipeline.
+JNLP containers enable communication between the Jenkins master and these agent nodes. The NLP protocol allows
+the master to connect to a remote agent over a network.
+2. Containerization:
+In modern CI/CD environments, especially in microservices architectures, Jenkins agents are often run inside containers
+(e.g., Docker). Using a JNLP container, the Jenkins master can automatically spin up new containers, register them as
+Jenkins agents, and offload build tasks to them dynamically.
+This helps ensure that the agents are ephemeral, meaning they can be spun up when needed and terminated after the
+job is completed, optimizing resource usage
+3. Security and Isolation:
+Using JNLP containers enhances security by isolating the build process. Instead of running builds on shared or directly
+exposed machines, each build job can run inside a secure container. This ensures that any potentially harmful code or
+dependencies don't affect other parts of the infrastructure.
+Containers also provide a clean environment for every job, ensuring consistent builds and eliminating the "works on my
+machine" problem.
+4. Cross-Platform Compatibility:
+JNLP containers can be used to run Jenkins agents on various platforms (e.g., Linux, Windows, macOs) without needing
+to install Jenkins agents directly on each machine. By using JNLP, Jenkins masters can interact with agents running on
+different operating systems in a consistent manner
+5. Dynamic Scaling:
+Containers Can be spun up and down quickly based on demand, enabling Jenkins to dynamically scale the number of
+agents available for processing builds. This in particularly useful when running multiple parallel jobs or when worktoads
+fluctuate, as it avoids the need to pre-allocate or maintain idle build nodes.
+6. Simplifying Setup:
+Using a JNLP container eliminates the need to manually configure Jenkins agents. The container can be easily set up with
+simple script that connects it to the Jenkins master, reducing manual intervention ầnd complexity when adding new
+agents to the Jenkins cluster.
+7. Jenkins Agent Docker Image:
+Many Jenkins setups use a pre-built Jenkins agent Docker image that includes the necessary JNLP agent capabilities.
+When Jenkins needs to launch a new agent, it simply starts a container from this image, which connects to the Jenkins
+master via the JNLP protocol and starts running jobs.
+In Summary:
+A JNLP container is needed in Jenkins CI/CD pipelines to facilitate dynamic, distributed, and scalable builds, It enables
+Jenkins to use remote agents (inside containers) to execute jobs, providing isolation, security, and efficient use of
+resources in a containerized environment. This approach simplifies the management of build agents, especially in large-
+scale or cloud-based CI/CD environments
+
